@@ -145,7 +145,7 @@ class Prover:
         muy =  alpha + phi*x
 
         challenge  = Challenge()
-        challenge.set(x, y_vec, z)
+        challenge.set(x, y, z)
 
         
         proof = Proof()
@@ -164,7 +164,17 @@ class Prover:
         # print(gh2, "\n")
         # gh2 = (self.V**(z*z)) * (g**sig) * (T1 ** x) * (T2 **x**2)
         # print(gh2, "\n")
-
+        # print("check t(x)")
+        # g1 = exp_vector(g_vec, proof.l)
+        # g2 = exp_vector(g_vec, self.a_L) * exp_vector(g_vec,mul(s_L,x)) *exp_vector(g_vec,mul(uni_vec, -z))
+        # print(g1, "\n")
+        # print(g2, "\n")
+        # hh_vec = [h_vec[i]**((y **(-1))**i) for i in range(n)]
+        # h_ary = exp_vector(hh_vec, hadamard_product(self.a_R, y_vec))
+        # h_a = exp_vector(h_vec, self.a_R)
+        # print("check h' vector")
+        # print(h_a, "\n")
+        # print(h_ary, "\n")
         return proof, challenge
 
 

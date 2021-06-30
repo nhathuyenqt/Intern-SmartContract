@@ -22,7 +22,7 @@ class Challenge:
     def __init__(self):
         self.x = 0
 
-    def set(self, _x, _y_vec, _z):
+    def set(self, _x, _y, _z):
         self.x = _x
-        self.y = _y_vec
+        self.y = _y
         self.z = _z
