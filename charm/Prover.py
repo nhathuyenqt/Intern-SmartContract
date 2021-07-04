@@ -2,27 +2,6 @@ from Proof import Challenge, Proof
 from GlobalConfig import *
 from FieldVector import *
 
-def exp_vector(x, y):
-    res = (x[0]**y[0])
-    # print("x = ", x)
-    for i in range(1, len(x)):
-        # print("x = ", x[i], " \ny= ",group1.init(ZR, y[i]))
-        # print("x = ", x[i], " \ny= ", y[i], type(y[i]))
-        # res = res * (x[i]**group1.init(ZR, y[i]))
-        res = res* (x[i]**y[i])
-    return res
-
-
-
-def inner_product(vec1, vec2):
-    product = group1.init(ZR, 0)
-    for i in range(n):
-        product = product + vec1[i]*vec2[i]
-    return product
-
-
-
-
 class Prover:
     def __init__(self):
         self.v = 0
@@ -53,6 +32,9 @@ class Prover:
         
         return c
     
+    # def fiat_shamir_transformation(self, i, x, c):
+    #     return group1.hash(i-1, c, a[i])
+
 
     def prove(self, _v, gama):
         self.v = _v
@@ -65,53 +47,53 @@ class Prover:
         
         alpha = group1.random(ZR)
         # print('alpha = ', alpha, type(alpha))
-        self.A = (h**alpha)* exp_vector(g_vec,self.a_L)*exp_vector(h_vec,self.a_R)
+        #(h**alpha)* exp_vector(g_vec,self.a_L)*exp_vector(h_vec,self.a_R)
+        self.A = self.commitment_for_vector(alpha, self.a_L, self.a_R) 
     
         s_L = [group1.random(ZR) for i in range(n)]
         s_R = [group1.random(ZR) for i in range(n)]
         phi = group1.random(ZR)
-        self.S = (h**phi)* exp_vector(g_vec, s_L)*exp_vector(h_vec, s_R)
+        self.S = self.commitment_for_vector(phi, s_L, s_R)
+        # self.S = (h**phi)* exp_vector(g_vec, s_L)*exp_vector(h_vec, s_R)
         
-        #Sent A, S to Prover // add A, S to Proof
+        #Sent 1: A, S to Prover // add A, S to Proof
 
-        #Challenge Points y, z
-        y = group1.random(ZR)
-        z = group1.random(ZR)
+        #Challenge 1: Points y, z
+        y = group1.hash((h, self.A), ZR)
+        z = group1.hash((y, self.S), ZR)
+
         y_vec = [y**i for i in range(n)]
 
         tau1 = group1.random(ZR)
+
         tau2 = group1.random(ZR)
 
-        
         z1 = mul(uni_vec, z)
         l0 = subtract(self.a_L, z1)
         l1 = s_L
         
         r0 = add( hadamard_product(y_vec, add(self.a_R, z1)), mul(bin_vec, z*z))
         r1 = hadamard_product(y_vec, s_R)
+
         v = inner_product(self.a_L, bin_vec)
         self.V = (h**gama)*(g**v)
-        print("------------- check dk vao --------\n 1 . v =  ",v, "  self.v ",self.v)
-        print(inner_product(self.a_L, hadamard_product(self.a_R, y_vec))) 
-        print(inner_product(subtract(subtract(self.a_L, uni_vec), self.a_R),y_vec))    
-        zv1 = z*z*inner_product(self.a_L, bin_vec) + z*inner_product(subtract(subtract(self.a_L, uni_vec), self.a_R),y_vec)+inner_product(self.a_L, hadamard_product(self.a_R, y_vec))
-        zv2 = z*z*v
-        print("zv1 ", zv1)
-        print("zv2 ", zv2)
+        # print("------------- check dk vao --------\n 1 . v =  ",v, "  self.v ",self.v)
+        # print(inner_product(self.a_L, hadamard_product(self.a_R, y_vec))) 
+        # print(inner_product(subtract(subtract(self.a_L, uni_vec), self.a_R),y_vec))    
         i1 = inner_product(uni_vec, y_vec)
         i2 = inner_product(uni_vec, bin_vec)
         sig = (z-z*z)*i1 - z*z*z*i2
         # print("sigma ", sig)
-        t0 = z*z*v + sig
-        print("\nt0-1")
-        print(t0)
+        # t0 = z*z*v + sig
+        # print("\nt0-1")
+        # print(t0)
         
-        print("\nt0-2")
-        print(t0)     
-        t3 = inner_product(subtract(self.a_L, z1), add(hadamard_product(y_vec, add(self.a_R, z1)), mul(bin_vec, z*z))) 
-        print("t0-3")
-        print(t3)
-        print("-------------\n")
+        # print("\nt0-2")
+        # print(t0)     
+        # t3 = inner_product(subtract(self.a_L, z1), add(hadamard_product(y_vec, add(self.a_R, z1)), mul(bin_vec, z*z))) 
+        # print("t0-3")
+        # print(t3)
+        # print("-------------\n")
         t0 = inner_product(l0, r0)
         t2 = inner_product(l1, r1)
         #t1 = <l0 + l1, r0 + r1> - t0 - t2
@@ -121,8 +103,8 @@ class Prover:
         print('commitment T1 = ', T1)
         print('commitment T2 = ', T2)
         
-        #Challenge Point x step 56
-        x = group1.random(ZR)
+        #Challenge 3: Point x step 56
+        x = group1.hash((z, T1, T2), ZR)
 
         # T11 = g**(t1*x)*h**(tau1*x)
         # T12 = T1**x
